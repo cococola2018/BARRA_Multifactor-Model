@@ -1,0 +1,138 @@
+%将股票按照市值和因子值大小分组，按月换仓，算出不同分组下组合的净值表现
+%从而挑选出最优股票组合
+%并且验证因子对股票收益率的解释能力和回归结果是否一致
+function [value]=Neur_Cap_Strategy(Factor, Close, Open,Cap,ST_state,Strade,Date_d,Date_m,Tradecost_ratio,num_Fac_group,num_Cap_group)
+
+[num_day,num_stock]=size(Factor);
+
+Close=Close(end-num_day+1:end,:);
+Open=Open(end-num_day+1:end,:);
+Cap=Cap(end-num_day+1:end,:);
+ST_state=ST_state(end-num_day+1:end,:);
+%Strade=Strade(end-num_day+1:end,:);
+Date_d=Date_d(end-num_day+1:end,:);
+
+[~,idr,~]=intersect(Date_m,Date_d,'Stable');
+if length(idr)>0
+    Date_m(1:idr(1)-1,:)=[];
+end
+
+Factor(isinf(Factor))=nan;
+
+%the following is to set the stock price of ST-stock or at its suspension
+%to be nan
+
+[id_ST]=find(ST_state==0);
+%[id_Strade]=find(Strade==2);
+Close(id_ST)=nan;
+Open(id_ST)=nan;
+Cap(id_ST)=nan;
+Factor(id_ST)=nan;
+%Close(id_Strade)=nan;
+% Open(id_Strade)=nan;
+% Cap(id_Strade)=nan;
+% Factor(id_Strade)=nan;
+
+[~,id0,~] = intersect(datenum(Date_d),datenum(Date_m),'stable');
+if datenum(Date_m(1))<datenum(Date_d(1))
+    id=nan(1,length(id0)+1);
+    id(1)=1;
+    id(2:end)=id0;
+else
+    id=id0;
+
+num_turnover=length(id);
+if datenum(Date_m(end))==datenum(Date_d(end))
+   num_turnover=num_turnover-1;
+end
+if datenum(Date_m(1))<datenum(Date_d(1))
+   num_turnover=num_turnover+1;
+end
+
+holding=zeros(num_turnover,num_stock,num_Fac_group,num_Cap_group);
+Cap_weight=zeros(num_turnover,num_Cap_group);
+
+%the following is to seperate the stocks into several Cap_groups
+for d=1:num_turnover
+    div_Cap=nan(num_Cap_group+1,1);
+    for cap_g=1:num_Cap_group+1
+        div_Cap(cap_g)=prctile(Cap(id0(d),:),100*(cap_g-1)/num_Cap_group);
+    end
+    div_Cap(num_Cap_group+1)=div_Cap(num_Cap_group+1)+0.1;
+    
+    for cap_g=1:num_Cap_group
+        pos1=Cap(d,:)>=div_Cap(cap_g);
+        pos2=Cap(d,:)<div_Cap(cap_g+1);
+        pos=pos1&pos2;
+        holding(d,pos,:,cap_g)=1;
+        Cap(d,isnan(Cap(d,:)))=0;
+        Cap_weight(d,cap_g)=sum(Cap(d,pos))/sum(Cap(d,:));
+    end 
+end
+   
+%the following is to seperate the stocks in terms of Fac_groups
+for d=1:num_turnover
+    div_Fac=nan(num_Fac_group+1);
+    for fac_g=1:num_Fac_group+1
+        div_Fac(fac_g)=prctile(Factor(id(d),:),100*(fac_g-1)/num_Fac_group);
+    end
+    div_Fac(num_Fac_group+1)=div_Fac(num_Fac_group+1)+0.1;
+    
+    for fac_g=1:num_Fac_group
+        pos1=Factor(d,:)>=div_Fac(fac_g);
+        pos2=Factor(d,:)<div_Fac(fac_g+1);
+        pos=pos1&pos2;
+        holding(d,pos,fac_g,:)=holding(d,pos,fac_g,:)+1;
+    end
+end
+
+pos=holding==1;
+holding(pos)=0;
+pos=holding==2;
+holding(pos)=1;
+
+for d=1:num_turnover
+    for fac_g=1:num_Fac_group
+        for cap_g=1:num_Cap_group
+            num=sum(holding(d,:,fac_g,cap_g));
+            holding(d,:,fac_g,cap_g)=holding(d,:,fac_g,cap_g)/num;
+        end
+    end
+end
+
+Close(isnan(Close)) = 0;
+Open(isnan(Open)) = 0;
+holding0=zeros(num_turnover,num_stock,num_Fac_group,num_Cap_group);
+
+for d=1:num_turnover
+    for cap_g=1:num_Cap_group    
+        for fac_g=1:num_Fac_group
+            if d==1
+                holding0(1,:,fac_g,cap_g)=holding(d,:,fac_g,cap_g)./Open(1,:)*(1-Tradecost_ratio);                
+                holding0(1,isnan(holding0(1,:,fac_g,cap_g)),fac_g,cap_g)=0;
+                holding0(1,isinf(holding0(1,:,fac_g,cap_g)),fac_g,cap_g)=0;                
+            else
+                holding0(d,:,fac_g,cap_g)=holding(d,:,fac_g,cap_g)./Open(id(d)+1,:)*(holding0(d-1,:,fac_g,cap_g)*Close(id(d),:)'/Cap_weight(d-1,cap_g))*(1-Tradecost_ratio);                
+                holding0(d,isnan(holding0(d,:,fac_g,cap_g)),fac_g,cap_g)=0;
+                holding0(d,isinf(holding0(d,:,fac_g,cap_g)),fac_g,cap_g)=0;                
+            end
+        end
+        holding0(d,:,:,cap_g)=holding0(d,:,:,cap_g)*Cap_weight(d,cap_g);
+    end    
+end
+
+holding_daily=zeros(num_day,num_stock,num_Fac_group,num_Cap_group);%preallocation can speed up the running
+holding_daily(1:id(2),:,:,:)=repmat(holding0(1,:,:,:),id(2),1);
+for d=3:num_turnover
+    holding_daily(id(d-1)+1:id(d),:,:,:)=repmat(holding0(d-1,:,:,:),id(d)-id(d-1),1);
+end
+holding_daily(id(num_turnover)+1:num_day,:,:,:)=repmat(holding0(d,:,:,:),num_day-id(num_turnover),1);
+
+value=zeros(num_day,num_Fac_group);
+for fac_g=1:num_Fac_group
+    asset_weight=sum(holding_daily(:,:,fac_g,:),4);
+    asset_weight(isnan(asset_weight))=0;
+    value(:,fac_g)=diag(Close*asset_weight');
+end
+
+end
