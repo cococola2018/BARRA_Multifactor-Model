@@ -40,11 +40,13 @@ end
 %*******************处理异常值*********************
 function [New_Data]=Delete_Outlier(Data)
 
-mean_value=mean(Data);
-std_value=std(Data);
+[num_day,num_stock]=size(Data);
 
-id=Data>mean_value+3*std_value || Data<mean_value-3*std_value;
-Data(id)=nan;
+mean_value=mean(Data,2,'omitnan');
+std_value=std(Data,0,2,'omitnan');
+
+Data(Data>mean_value+3*std_value)=nan;
+Data(Data<mean_value-3*std_value)=nan;
 New_Data=Data;
 
 end
