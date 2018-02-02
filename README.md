@@ -13,4 +13,4 @@ Reference materials:
 
 <MSCI Select Value Momentum Blend Indexes Methodology>
 
-You can download the above materials from MSCI' website.
+You can download the above materials from MSCI's website.
