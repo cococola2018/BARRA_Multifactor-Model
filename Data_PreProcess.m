@@ -40,8 +40,6 @@ end
 %*******************处理异常值*********************
 function [New_Data]=Delete_Outlier(Data)
 
-[num_day,num_stock]=size(Data);
-
 mean_value=mean(Data,2,'omitnan');
 std_value=std(Data,0,2,'omitnan');
 
