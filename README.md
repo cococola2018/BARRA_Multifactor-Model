@@ -6,6 +6,7 @@ We want to replicate the MSCI index first, which is introduced in the reference 
 the portfolios.
 
 Reference materials:
+
 <MSCI_Risk_Weighted_Indexes_Methodology_Sep2017>
 
 <MSCI Top 50 Dividend Indexes Methodology>
