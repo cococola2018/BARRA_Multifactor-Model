@@ -7,6 +7,9 @@ the portfolios.
 
 Reference materials:
 <MSCI_Risk_Weighted_Indexes_Methodology_Sep2017>
+
 <MSCI Top 50 Dividend Indexes Methodology>
+
 <MSCI Select Value Momentum Blend Indexes Methodology>
+
 You can download the above materials from MSCI' website.
