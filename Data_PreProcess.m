@@ -35,6 +35,7 @@ Raw_Date_Factor.PB=PB(rowid:end,:);
 Raw_Date_Factor.Or_ttm=Or_ttm(rowid:end,:);
 Raw_Date_Factor.Roa1_ttm=Roa1_ttm(rowid:end,:);
 Raw_Date_Factor.Roe_ttm=Roe_ttm(rowid:end,:);
+Raw_Date_Factor.Nppc_ttm=Nppc_ttm(rowid-242:end,:);%由于要计算个股净利润增长值作为因子值，因此要多取前一年的净利润数据用于计算
 
 end
 
