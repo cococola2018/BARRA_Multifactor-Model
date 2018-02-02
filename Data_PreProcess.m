@@ -1,3 +1,4 @@
+%*******************读入原始数据*********************
 function [Raw_Data_Stock,Raw_Date_Factor]=Load_Data(start_date)
 
 Raw_Data_Stock=struct;
@@ -33,5 +34,17 @@ Raw_Date_Factor.PB=PB(id:end);
 Raw_Date_Factor.Or_ttm=Or_ttm(id:end);
 Raw_Date_Factor.Roa1_ttm=Roa1_ttm(id:end);
 Raw_Date_Factor.Roe_ttm=Roe_ttm(id:end);
+
+end
+
+%*******************处理异常值*********************
+function [New_Data]=Delete_Outlier(Data)
+
+mean_value=mean(Data);
+std_value=std(Data);
+
+id=Data>mean_value+3*std_value || Data<mean_value-3*std_value;
+Data(id)=nan;
+New_Data=Data;
 
 end
