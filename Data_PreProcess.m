@@ -86,3 +86,20 @@ end
 New_Data=Data;
 
 end
+
+%*******************因子值标准化*********************
+%此处均值使用每日市值加权的均值，标准差为每日等权标准差
+function [New_Data]=Standardize(Data,Cap)
+
+Data(isnan(Data)||isnan(Cap))=nan;
+Cap(isnan(Data)||isnan(Cap))=nan;
+Data_Cap=Data*Cap;
+
+mean_value=mean(Data_Cap,2,'omitnan');
+sum_Cap=sum(Cap,2,'omitnan');
+mean_value=mean_value./sum_Cap;
+std_value=std(Data,0,2,'omitnan');
+
+New_Data=(Data-mean_value)./std_value;
+
+end
