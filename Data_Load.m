@@ -26,7 +26,7 @@ Raw_Data_Stock.INDU=INDU(id:end);
 Raw_Data_Stock.ST_state=ST_state(id:end);
 Raw_Data_Stock.Strade=Strade(id:end);
 
-%以下是因子数据读入
+%以下是因子数据读入，根据具体情况可以继续添加因子数据
 Raw_Date_Factor.Dp_ttm=Dp_ttm(id:end);
 Raw_Date_Factor.Ebitda1_ttm=Ebitda1_ttm(id:end);
 Raw_Date_Factor.PB=PB(id:end);
